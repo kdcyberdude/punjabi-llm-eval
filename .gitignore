@@ -9,3 +9,7 @@ lm_cache
 serbian_eval/
 wandb/
 .env
+google-cloud-sdk/
+google-cloud*
+punjabi_eval/
+test.py

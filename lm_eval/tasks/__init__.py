@@ -67,6 +67,8 @@ from . import ceval
 from . import csatqa
 from . import haerae
 from . import cmmlu
+from . import alpaca
+from . import orca
 
 ########################################
 # Translation tasks
@@ -99,6 +101,8 @@ all_translation_benchmarks = {
 
 
 TASK_REGISTRY = {
+    "alpaca": alpaca.Alpaca,
+    "orca": orca.Orca,
     "babi": babi.Babi,
     # GLUE
     "cola": glue.CoLA,

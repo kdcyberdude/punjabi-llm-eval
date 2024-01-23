@@ -172,6 +172,8 @@ def get_keys_of_interest(task_name):
         "triviaqa": ["question", "answer/value", "answer/aliases"],
         # Reading Comprehension
         "boolq": ["passage", "question"],
+        "alpaca": ["instruction", "input", "output"],
+        "orca": ["system_prompt", "question", "response"],
     }
 
     return task_to_keys_of_interest[task_name]
@@ -228,11 +230,21 @@ def translate_dataset(task_name, translate_fn, first_level_keys, second_level_ke
                         continue
 
                     if isinstance(outer_value, str):
-                        num_chars_dataset_current += len(outer_value)
-                        if start_num_chars is not None and start_num_chars + num_chars_dataset_current > char_limit:
-                            exit_flag=True
-                            break
-                        translated_doc[outer_key] = translate_fn(outer_value)
+                        # HACK: we are dealing with translation only for alpaca and orca instruct tuning datasets
+                        # therefore checking here for cached results
+                        if outer_value in TRANSLATION_MAP_CACHE:
+                            translated_doc[outer_key] = TRANSLATION_MAP_CACHE[outer_value]
+                        else:
+                            num_chars_dataset_current += len(outer_value)
+                            if start_num_chars is not None and start_num_chars + num_chars_dataset_current > char_limit:
+                                exit_flag=True
+                                break
+                            if outer_value == "":
+                                translated_doc[outer_key] = ""
+                            else:
+                                t = translate_fn(outer_value)
+                                translated_doc[outer_key] = t
+                                TRANSLATION_MAP_CACHE[outer_value] = t
 
                     elif isinstance(outer_value, list):
                         assert all(isinstance(x, str) for x in outer_value), f'Expected all values in list to be str, but found {outer_value}'
@@ -298,10 +310,10 @@ def translate_dataset(task_name, translate_fn, first_level_keys, second_level_ke
 
     return num_chars_dataset_current
 
-
-def translate_eval(task_dict_items, target_lang="sr", project_id=None, char_limit=500000, start_from_doc_index=None):
+TRANSLATION_MAP_CACHE = {} # to save duplicate calls
+def translate_eval(task_dict_items, target_lang="pa", project_id=None, char_limit=500000, start_from_doc_index=None):
     assert project_id is not None, "Project ID must be specified"
-    assert target_lang == "sr", "Only Serbian (Cyrillic) is supported for now"
+    assert target_lang == "pa", "Only Punjabi is supported for now"
 
     client = translate.TranslationServiceClient()
     location = "global"
@@ -309,7 +321,7 @@ def translate_eval(task_dict_items, target_lang="sr", project_id=None, char_limi
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     parent_dir_path = os.path.abspath(os.path.join(this_file_path, os.pardir))
-    out_dir = os.path.join(parent_dir_path, "serbian_eval")
+    out_dir = os.path.join(parent_dir_path, "punjabi_eval")
     os.makedirs(out_dir, exist_ok=True)
 
     debug_translate_fn = get_translate_fn(client, parent, target_lang, debug_mode=True)
@@ -335,6 +347,8 @@ def translate_eval(task_dict_items, target_lang="sr", project_id=None, char_limi
 
             task_docs = list(task_doc_func())
             num_chars_pred_total = translate_dataset(task_name, debug_translate_fn, first_level_keys, second_level_keys, task_docs, out_dir, is_test=True)
+            global TRANSLATION_MAP_CACHE
+            TRANSLATION_MAP_CACHE = {} # reset cache, previous cache was created for char count
             num_chars_total += translate_dataset(task_name, translate_fn, first_level_keys, second_level_keys, task_docs, out_dir, is_test=True, start_num_chars=num_chars_total, end_num_chars=num_chars_total+num_chars_pred_total, char_limit=char_limit, start_from_doc_index=start_from_doc_index)
 
             if task_name in ["nq_open", "triviaqa"]:

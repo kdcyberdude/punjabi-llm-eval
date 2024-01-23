@@ -6,17 +6,17 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
             "request": "launch",
             "program": "${file}",
+            "type": "python",
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
                 "--model", "hf",
                 "--model_args", "pretrained=mistralai/Mistral-7B-v0.1",
-                "--translation_project_id", "ortus-391014",
-                "--tasks", "piqa",
-                "--char_limit", "500000",
+                "--translation_project_id", "punjabi-llm",
+                "--tasks", "alpaca",
+                "--char_limit", "10000",
                 "--start_from_doc_index", "0",
             ]
         }
