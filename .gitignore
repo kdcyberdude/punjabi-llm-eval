@@ -13,3 +13,4 @@ google-cloud-sdk/
 google-cloud*
 punjabi_eval/
 test.py
+upload_to_hub.ipynb

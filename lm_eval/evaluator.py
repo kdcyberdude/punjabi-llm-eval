@@ -17,6 +17,14 @@ import json
 import os
 from google.cloud import translate
 from tqdm import tqdm
+import sys
+sys.path.append('/home/kd/Desktop/proj/dec/IndicTrans2/')
+
+from inference.engine import Model
+
+model = Model('/home/kd/Desktop/proj/dec/IndicTrans2/en-indic-preprint/ct2_fp16_model', model_type="ctranslate2")
+tgt_lang, src_lang = "pan_Guru", "eng_Latn"
+
 
 @positional_deprecated
 def simple_evaluate(
@@ -186,17 +194,24 @@ def get_translate_fn(client, parent, target_lang, debug_mode=False):
         if debug_mode:  # not spending money :)
             return "dummy"
         else:
-            response = client.translate_text(
-                request={
-                    "parent": parent,
-                    "contents": [src_str],
-                    "mime_type": "text/plain",
-                    "source_language_code": "en-US",
-                    "target_language_code": target_lang,
-                }
-            )
-            trg_str = response.translations[0].translated_text
-            return trg_str
+
+            # IT2 Model
+            chunks = [(src_str, src_lang, tgt_lang)]
+            pb_translation = model.paragraphs_batch_translate__multilingual(chunks)
+            return pb_translation[0]
+
+            # Google Translate API
+            # response = client.translate_text(
+            #     request={
+            #         "parent": parent,
+            #         "contents": [src_str],
+            #         "mime_type": "text/plain",
+            #         "source_language_code": "en-US",
+            #         "target_language_code": target_lang,
+            #     }
+            # )
+            # trg_str = response.translations[0].translated_text
+            # return trg_str
 
     return translate_helper_fn
 

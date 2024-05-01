@@ -62,8 +62,9 @@ def main():
     else:
         task_names = utils.pattern_match(args.tasks.split(","), tasks.ALL_TASKS)
 
-    if len(task_names) > 1:
-        raise ValueError("Please specify only one task can be specified at a time to avoid unexpected billing issues, and make sure you've set proper char limit.")
+# since we are using IndicTrans2 model to translate we can comment this out
+    # if len(task_names) > 1:
+    #     raise ValueError("Please specify only one task can be specified at a time to avoid unexpected billing issues, and make sure you've set proper char limit.")
 
     print(f"Selected Tasks: {task_names}")
 

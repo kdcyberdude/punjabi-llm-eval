@@ -16,7 +16,7 @@
                 "--model_args", "pretrained=mistralai/Mistral-7B-v0.1",
                 "--translation_project_id", "punjabi-llm",
                 "--tasks", "alpaca",
-                "--char_limit", "10000",
+                "--char_limit", "395892780000",
                 "--start_from_doc_index", "0",
             ]
         }
